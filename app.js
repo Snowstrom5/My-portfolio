@@ -1,36 +1,81 @@
 (function () {
-    // Custom Cursor System
+    // Enhanced Custom Cursor System
     const cursor = document.createElement('div');
     cursor.className = 'custom-cursor';
     document.body.appendChild(cursor);
 
+    // Create cursor trail elements
+    const trailElements = [];
+    const trailCount = 8;
+    for (let i = 0; i < trailCount; i++) {
+        const trail = document.createElement('div');
+        trail.className = 'cursor-trail';
+        trail.style.opacity = (trailCount - i) / trailCount * 0.6;
+        trail.style.transform = `scale(${0.3 + (i / trailCount) * 0.7})`;
+        document.body.appendChild(trail);
+        trailElements.push(trail);
+    }
+
     let mouseX = 0, mouseY = 0;
     let cursorX = 0, cursorY = 0;
+    let trailPositions = Array(trailCount).fill({ x: 0, y: 0 });
+    let isMoving = false;
+    let moveTimeout;
 
-    // Mouse move handler
+    // Enhanced mouse move handler with throttling
     document.addEventListener('mousemove', (e) => {
         mouseX = e.clientX;
         mouseY = e.clientY;
+        
+        if (!isMoving) {
+            isMoving = true;
+            cursor.style.opacity = '1';
+        }
+        
+        clearTimeout(moveTimeout);
+        moveTimeout = setTimeout(() => {
+            isMoving = false;
+            cursor.style.opacity = '0.7';
+        }, 100);
     });
 
-    // Smooth cursor animation
+    // Ultra-smooth cursor animation with improved easing
     function animateCursor() {
-        cursorX += (mouseX - cursorX) * 0.1;
-        cursorY += (mouseY - cursorY) * 0.1;
+        // Use different easing for different speeds
+        const distance = Math.sqrt((mouseX - cursorX) ** 2 + (mouseY - cursorY) ** 2);
+        const speed = Math.min(distance / 100, 1);
+        const easing = speed > 0.5 ? 0.15 : 0.08; // Faster for quick movements
         
+        cursorX += (mouseX - cursorX) * easing;
+        cursorY += (mouseY - cursorY) * easing;
+        
+        // Update main cursor
         cursor.style.left = cursorX + 'px';
         cursor.style.top = cursorY + 'px';
+        
+        // Update trail positions
+        trailPositions.unshift({ x: cursorX, y: cursorY });
+        trailPositions.pop();
+        
+        trailElements.forEach((trail, index) => {
+            if (trailPositions[index]) {
+                trail.style.left = trailPositions[index].x + 'px';
+                trail.style.top = trailPositions[index].y + 'px';
+            }
+        });
         
         requestAnimationFrame(animateCursor);
     }
     animateCursor();
 
-    // Hover effects
-    const hoverElements = document.querySelectorAll('a, button, .control, .theme-btn, .show-more-btn, .main-btn, .portfolio-item, .orbit-card');
+    // Enhanced hover effects with better visual feedback
+    const hoverElements = document.querySelectorAll('a, button, .control, .theme-btn, .show-more-btn, .main-btn, .portfolio-item, .orbit-card, input, textarea');
     
     hoverElements.forEach(el => {
         el.addEventListener('mouseenter', () => {
             cursor.classList.add('hover');
+            // Add ripple effect
+            createRippleEffect(cursorX, cursorY);
         });
         
         el.addEventListener('mouseleave', () => {
@@ -38,22 +83,116 @@
         });
     });
 
-    // Click effects
-    document.addEventListener('mousedown', () => {
+    // Enhanced click effects with visual feedback
+    document.addEventListener('mousedown', (e) => {
         cursor.classList.add('click');
+        createClickWave(e.clientX, e.clientY);
     });
     
     document.addEventListener('mouseup', () => {
         cursor.classList.remove('click');
     });
 
-    // Hide cursor when leaving window
+    // Improved window enter/leave handling
     document.addEventListener('mouseleave', () => {
         cursor.style.opacity = '0';
+        trailElements.forEach(trail => trail.style.opacity = '0');
     });
     
     document.addEventListener('mouseenter', () => {
         cursor.style.opacity = '1';
+        trailElements.forEach((trail, index) => {
+            trail.style.opacity = (trailCount - index) / trailCount * 0.6;
+        });
+    });
+
+    // Ripple effect function
+    function createRippleEffect(x, y) {
+        const ripple = document.createElement('div');
+        ripple.className = 'cursor-ripple';
+        ripple.style.left = x + 'px';
+        ripple.style.top = y + 'px';
+        document.body.appendChild(ripple);
+        
+        setTimeout(() => {
+            ripple.remove();
+        }, 600);
+    }
+
+    // Click wave effect
+    function createClickWave(x, y) {
+        const wave = document.createElement('div');
+        wave.className = 'cursor-wave';
+        wave.style.left = x + 'px';
+        wave.style.top = y + 'px';
+        document.body.appendChild(wave);
+        
+        setTimeout(() => {
+            wave.remove();
+        }, 800);
+    }
+
+    // Accessibility and performance optimizations
+    const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    const prefersReducedData = navigator.connection && navigator.connection.saveData;
+    
+    if (prefersReducedMotion || prefersReducedData) {
+        // Disable trail effects for users who prefer reduced motion or have data saving enabled
+        trailElements.forEach(trail => trail.style.display = 'none');
+        cursor.style.transition = 'all 0.1s ease';
+    }
+
+    // Performance optimization: reduce animation frequency on slower devices
+    let animationFrameId;
+    let lastTime = 0;
+    const targetFPS = 60;
+    const frameInterval = 1000 / targetFPS;
+
+    function optimizedAnimateCursor(currentTime) {
+        if (currentTime - lastTime >= frameInterval) {
+            // Use different easing for different speeds
+            const distance = Math.sqrt((mouseX - cursorX) ** 2 + (mouseY - cursorY) ** 2);
+            const speed = Math.min(distance / 100, 1);
+            const easing = speed > 0.5 ? 0.15 : 0.08;
+            
+            cursorX += (mouseX - cursorX) * easing;
+            cursorY += (mouseY - cursorY) * easing;
+            
+            cursor.style.left = cursorX + 'px';
+            cursor.style.top = cursorY + 'px';
+            
+            if (!prefersReducedMotion && !prefersReducedData) {
+                trailPositions.unshift({ x: cursorX, y: cursorY });
+                trailPositions.pop();
+                
+                trailElements.forEach((trail, index) => {
+                    if (trailPositions[index]) {
+                        trail.style.left = trailPositions[index].x + 'px';
+                        trail.style.top = trailPositions[index].y + 'px';
+                    }
+                });
+            }
+            
+            lastTime = currentTime;
+        }
+        animationFrameId = requestAnimationFrame(optimizedAnimateCursor);
+    }
+    
+    // Replace the original animateCursor with optimized version
+    cancelAnimationFrame(animationFrameId);
+    optimizedAnimateCursor(0);
+
+    // Add keyboard navigation support
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'Tab') {
+            cursor.style.opacity = '0.5';
+        }
+    });
+    
+    document.addEventListener('keyup', (e) => {
+        if (e.key === 'Tab') {
+            cursor.style.opacity = '1';
+        }
     });
 
     [...document.querySelectorAll(".control")].forEach(button => {
