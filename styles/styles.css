@@ -54,7 +54,7 @@ body {
   cursor: none;
 }
 
-/* Custom Cursor System */
+/* Enhanced Custom Cursor System */
 .custom-cursor {
   position: fixed;
   width: 20px;
@@ -64,12 +64,13 @@ body {
   border-radius: 50%;
   pointer-events: none;
   z-index: 9999;
-  transition: all 0.1s cubic-bezier(0.23, 1, 0.32, 1);
+  transition: all 0.15s cubic-bezier(0.25, 0.46, 0.45, 0.94);
   transform: translate(-50%, -50%);
   box-shadow: 
     0 0 20px rgba(var(--accent-r), var(--accent-g), var(--accent-b), 0.5),
     inset 0 0 10px rgba(255, 255, 255, 0.2);
   animation: cursorPulse 2s ease-in-out infinite;
+  will-change: transform, opacity;
 }
 
 .custom-cursor::before {
@@ -130,12 +131,75 @@ body {
   box-shadow: 
     0 0 25px rgba(255, 255, 255, 0.8),
     inset 0 0 8px rgba(var(--accent-r), var(--accent-g), var(--accent-b), 0.3);
+  transform: translate(-50%, -50%) scale(0.9);
 }
 
 .custom-cursor.click::before {
   width: 4px;
   height: 4px;
   background: var(--color-secondary);
+}
+
+/* Cursor Trail Effects */
+.cursor-trail {
+  position: fixed;
+  width: 20px;
+  height: 20px;
+  background: radial-gradient(circle, rgba(var(--accent-r), var(--accent-g), var(--accent-b), 0.4) 0%, transparent 70%);
+  border-radius: 50%;
+  pointer-events: none;
+  z-index: 9998;
+  transform: translate(-50%, -50%);
+  transition: opacity 0.3s ease;
+  will-change: transform, opacity;
+}
+
+/* Cursor Ripple Effect */
+.cursor-ripple {
+  position: fixed;
+  width: 40px;
+  height: 40px;
+  border: 2px solid rgba(var(--accent-r), var(--accent-g), var(--accent-b), 0.6);
+  border-radius: 50%;
+  pointer-events: none;
+  z-index: 9997;
+  transform: translate(-50%, -50%) scale(0);
+  animation: rippleExpand 0.6s ease-out forwards;
+}
+
+@keyframes rippleExpand {
+  0% {
+    transform: translate(-50%, -50%) scale(0);
+    opacity: 1;
+  }
+  100% {
+    transform: translate(-50%, -50%) scale(2);
+    opacity: 0;
+  }
+}
+
+/* Cursor Wave Effect */
+.cursor-wave {
+  position: fixed;
+  width: 60px;
+  height: 60px;
+  background: radial-gradient(circle, rgba(var(--accent-r), var(--accent-g), var(--accent-b), 0.3) 0%, transparent 70%);
+  border-radius: 50%;
+  pointer-events: none;
+  z-index: 9996;
+  transform: translate(-50%, -50%) scale(0);
+  animation: waveExpand 0.8s ease-out forwards;
+}
+
+@keyframes waveExpand {
+  0% {
+    transform: translate(-50%, -50%) scale(0);
+    opacity: 0.8;
+  }
+  100% {
+    transform: translate(-50%, -50%) scale(3);
+    opacity: 0;
+  }
 }
 
 /* Cursor animations */
@@ -177,12 +241,57 @@ body {
 }
 
 /* Interactive elements cursor states */
-a, button, .control, .theme-btn, .show-more-btn, .main-btn, .portfolio-item, .orbit-card {
+a, button, .control, .theme-btn, .show-more-btn, .main-btn, .portfolio-item, .orbit-card, input, textarea {
   cursor: none;
 }
 
-a:hover, button:hover, .control:hover, .theme-btn:hover, .show-more-btn:hover, .main-btn:hover, .portfolio-item:hover, .orbit-card:hover {
+a:hover, button:hover, .control:hover, .theme-btn:hover, .show-more-btn:hover, .main-btn:hover, .portfolio-item:hover, .orbit-card:hover, input:hover, textarea:hover {
   cursor: none;
+}
+
+/* Accessibility: Respect user preferences for reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  .custom-cursor {
+    animation: none;
+    transition: all 0.1s ease;
+  }
+  
+  .cursor-trail {
+    display: none !important;
+  }
+  
+  .cursor-ripple,
+  .cursor-wave {
+    display: none !important;
+  }
+  
+  .custom-cursor::before,
+  .custom-cursor::after {
+    animation: none;
+  }
+}
+
+/* Performance optimizations */
+.custom-cursor,
+.cursor-trail,
+.cursor-ripple,
+.cursor-wave {
+  contain: layout style paint;
+  backface-visibility: hidden;
+  transform-style: preserve-3d;
+}
+
+/* High contrast mode support */
+@media (prefers-contrast: high) {
+  .custom-cursor {
+    border: 3px solid var(--color-white);
+    background: var(--color-secondary);
+  }
+  
+  .custom-cursor.hover {
+    background: var(--color-white);
+    border-color: var(--color-secondary);
+  }
 }
 
 /* Advanced Multi-Layer Particle System */
@@ -499,8 +608,20 @@ section {
   height: 100%;
   object-fit: cover;
   transition: all 0.4s ease-in-out;
-  filter: grayscale(100%);
   animation: float 6s ease-in-out infinite;
+}
+.header-decorations { position: absolute; inset: 0; pointer-events: none; }
+.header-decor { position: absolute; border-radius: 12px; box-shadow: 0 8px 24px rgba(0,0,0,.25); filter: none; opacity: .9; animation: driftDecor 16s ease-in-out infinite; }
+.decor-1 { top: 8%; left: 62%; width: 56px; height: 56px; animation-delay: 0s; }
+.decor-2 { top: 70%; left: 10%; width: 64px; height: 64px; animation-delay: -3s; }
+.decor-3 { top: 18%; left: 8%; width: 60px; height: 60px; animation-delay: -6s; }
+.decor-4 { top: 78%; left: 58%; width: 52px; height: 52px; animation-delay: -9s; }
+.decor-5 { top: 40%; left: 85%; width: 58px; height: 58px; animation-delay: -12s; }
+@keyframes driftDecor {
+  0%, 100% { transform: translate3d(0,0,0) rotate(0deg) scale(1); opacity: .9; }
+  25% { transform: translate3d(6px, -4px, 0) rotate(2deg) scale(1.03); opacity: .95; }
+  50% { transform: translate3d(-4px, 6px, 0) rotate(-2deg) scale(0.98); opacity: .9; }
+  75% { transform: translate3d(5px, 3px, 0) rotate(1deg) scale(1.01); opacity: .92; }
 }
 .header-content .left-header .image {
   background: radial-gradient(1200px 600px at -10% -10%, rgba(var(--accent-r), var(--accent-g), var(--accent-b), 0.25), transparent 60%),
@@ -1883,6 +2004,8 @@ section {
     margin: 0 auto;
     width: 90%;
   }
+  /* Hide header decorative images on small screens to keep UI clean */
+  .header-decor { display: none !important; }
 
   .controls {
     top: auto;
